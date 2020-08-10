@@ -11,23 +11,630 @@
 		<link rel="stylesheet" href="dist/theme/black.css" id="theme">
 
 		<!-- Theme used for syntax highlighted code -->
-		<link rel="stylesheet" href="plugin/highlight/monokai.css" id="highlight-theme">
+		<link rel="stylesheet" href="plugin/highlight/vscode.css" id="highlight-theme">
 	</head>
 	<body>
+
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
-				<script type="text/template">
-						```php [1|3-5]
-						public function foo()
-						{
-								$foo = array(
-										'bar' => 'bar'
-								)
-						}
-						```
-				</script>
+					<section class="" data-id="181cfcfcb681d2c595beb8ddbf498b6d">
+							<h1 style="text-align: center;">AngularJS Testing Workshop</h1>
+					</section>
+					<section class="" data-id="6bf7d403c6fa5c925532f42928293ee8">
+							<h2>
+									<span style="font-size: 64.566px; font-weight: normal;">Setup</span><br>
+							</h2>
+							<div><br></div>
+							<pre class="shell"><code class="javascript" data-trim>git clone https://github.com/adambotley/testing-workshop.git
+
+cd testing-workshop
+npm install
+npm install -g http-server
+npm run build
+npm run serve
+
+localhost:8080
+			</code></pre>
+							<br>
+					</section>
+					<section class="" data-id="f6133bc1460249c29463b0a76f963b6a">
+							<h2>
+									<span style="font-size: 64.566px; font-weight: normal;">Overview</span>
+							</h2>
+							<div><br></div>
+							<div>We will cover...</div>
+							<div>
+									<div><br></div>
+									<ul>
+											<li>$provide</li>
+											<li>$httpBackend</li>
+											<li>Jest Spies</li>
+											<li>$uibModal</li>
+											<li>Handling Model Changes</li>
+									</ul>
+									<div><br></div>
+							</div>
+							<div style="text-align: center;">Feel free to ask questions throughout</div>
+					</section>
+					<section class="" data-id="40f7afd40ec912a6b2c1f6e3ae800725">
+							<h2>
+									<span style="font-size: 64.566px; font-weight: normal;">Todo Application</span><br>
+							</h2>
+							<div>Overview</div><img src="https://s3.amazonaws.com/media-p.slid.es/uploads/136320/images/7624833/todo_app_diagram__3_.png">
+					</section>
+					<section class="" data-id="fa0b3f37e264ee5300a7e7957687ffa3">
+							<h2>
+									<span style="font-size: 64.566px; font-weight: normal;">1 - $provide</span><br>
+							</h2>
+							<div><br></div>
+							<div>
+									<pre><code class="shell" data-trim>git checkout task/1-provide
+
+app/services/todo-list.service.spec.ts
+			</code></pre>
+							</div>
+							<br>
+					</section>
+					<section class="" data-id="3fb7abbcb2e3c8117c15368e4b1410a2">
+							<h2>
+									<span style="font-size: 64.566px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal;">1 - $provide</span><br>
+							</h2>
+							<div>Mocking the component module</div>
+							<div>
+									<span style="font-size: 36px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400;">dependencies listed in module are loaded</span><br>
+							</div>
+							<div>
+									<pre><code class="javascript">export const todoListServiceModuleName = angular
+  .module('testingWorkshop.app.services.todoList', [
+    todoResourceModuleName,
+  ])
+  .service('todoListService', TodoListService)
+  .name</code></pre>
+							</div>
+							mock the module using angular.mock.module inside a beforeEach<div>
+									<div>
+											<pre><code class="javascript" data-trim>  // Mock the module being tested.
+  // Remember this loads the module dependencies for us
+  beforeEach(angular.mock.module(todoListServiceModuleName))
+			</code></pre>
+							</div>
+					</section>
+					<section class="" data-id="1fa13f6bb01bcf7ea12a4e1e7b425a8a">
+							<h2>
+									<span style="font-size: 64.566px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal;">1 - $provide</span><br>
+							</h2>
+							<div>accessing injected dependencies</div>
+							<div><br></div>
+							<div>
+									<pre><code class="javascript">// Get local references to angular components/services
+beforeEach(inject((
+  _$q_: ng.IQService,
+  _$timeout_: ng.ITimeoutService,
+  _todoListService_: TodoListService,
+) =&gt; {
+  $q = _$q_
+  $timeout = _$timeout_
+  todoListService = _todoListService_
+}))</code></pre>
+							</div>
+							<div><br></div>
+							<div>Mocking must be done <b>before</b>&nbsp;injecting dependencies</div>
+							<div>
+									<br>Mocking is done using $provide</div>
+							<div><br></div>
+					</section>
+					<section class="" data-id="0e3edf87b2f70226284b03ebe858e4c4">
+							<h2 style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal;"><span style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal; font-size: 64.566px;">1 - $provide</span></h2>
+							<p>Mocking dependencies</p>
+							<p><br></p>
+							<p>todoListService uses localStorage</p>
+							<p>mocking allows us to inspect storage more easily</p>
+							<p>mocking is done using $provide</p>
+							<p><br></p>
+							<pre><code class="javascript">beforeEach(angular.mock.module(($provide: ng.auto.IProvideService) =&gt; {
+  ...
+}))
+			</code></pre>
+							<br>
+					</section>
+					<section class="" data-id="69c41061aefe1ae535bef6de18e1727d">
+							<h2 style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal;"><span style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal; font-size: 64.566px;">1 - $provide</span></h2>
+							<h2></h2>
+							<p style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;">Mocking localStorage</p>
+							<p style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;"><span style="font-size: 36px;">app/test-utils.ts contains pre-built MockStorage</span></p>
+							<pre><code class="javascript">export class MockStorage {
+    __storageData: [string, string][] = []
+
+
+    getItem(key: string) {
+      ...
+    }
+
+    removeItem(key: string) {
+      ...
+    }
+
+    setItem(key: string, value: string) {
+      ...
+    }
+
+    get length() {
+      ...
+    }
+  }
+			</code></pre>
+							<br>
+					</section>
+					<section class="" data-id="4d95dcf03c35421920ee957bd06e1dc8">
+							<h2 style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal;"><span style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal; font-size: 64.566px;">1 - $provide</span></h2>
+							<h2 style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal;"></h2>
+							<p style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;"><span style="font-size: 36px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400;">Mocking localStorage</span><br></p>
+							<p style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;"><span style="font-size: 36px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400;"><br></span></p>
+							<p style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;"><span style="font-size: 36px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400;">Using the given beforeEach...</span></p>
+							<p style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;"></p>
+							<ol>
+									<li><span style="font-size: 36px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400;">Instantiate new instance of MockStorage and reference locally</span></li>
+									<li><span style="font-size: 36px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400;">create mock $window object using mock localStorage</span></li>
+									<li><span style="font-size: 36px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400;">provide mock $window using $provide</span></li>
+							</ol>
+							<pre><code class="javascript">// replace the normal $window with our own using $provide
+$provide.constant('$window', $window)</code></pre>
+							<p></p>
+							<p></p>
+							<p></p>
+							<p></p>
+					</section>
+					<section class="" data-id="b77c36eb3a875eb79cdf7d4e8f0d6034">
+							<h2 style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal;"><span style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal; font-size: 64.566px;">1 - $provide</span></h2>
+							<h2 style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal;"></h2>
+							<h2></h2>
+							<p style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;"><span style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;">Mocking localStorage</span></p>
+							<pre><code class="shell">git checkout answer/1-provide</code></pre>
+							<p style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;"></p>
+							<pre><code class="javascript">beforeEach(angular.mock.module(($provide: ng.auto.IProvideService) =&gt; {
+  // Instantiate a new MockStorage object before each test
+  localStorageMock = new MockStorage()
+
+  // assign it to a mock $window object
+  $window = {
+    localStorage: localStorageMock,
+  }
+
+  // replace the normal $window with out own using $provide
+  $provide.constant('$window', $window)
+}))</code></pre>
+							<br>
+							<p></p>
+							<br>
+					</section>
+					<section class="" data-id="b716290b2b3f7143095117861e2b0884">
+							<h2>2 - $httpBackend</h2>
+							<div><br></div>
+							<pre><code class="shell">git checkout task/2-http-backend
+
+app/services/todo-list.service.spec.ts</code></pre>
+							<br>
+					</section>
+					<section class="" data-id="a9d37b3abb8249bb2704f97e6d825dc2">
+							<h2>2 - $httpBackend</h2>
+							<div><br></div>
+							<div>used for handling or asserting http requests</div>
+							<div><br></div>
+							<div>can alter response without needing an API<br><br>persists requests in a queue until flushed</div>
+							<div><br></div>
+							<div>order of requests are important</div>
+					</section>
+					<section class="" data-id="31e19a6cf75d7930126519354bb39f15">
+							<h2 style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal;">2 - $httpBackend</h2>
+							<div>
+									<div>$httpBackend.expect[METHOD]</div>
+									<div>use to assert requests</div>
+									<div>
+											<pre><code class="javascript">$httpBackend.expectGET(`/api/v1/todo/${id}`)
+  .respond(200, responseObject)</code></pre>
+									</div>
+									<div>$httpBackend.when[METHOD]</div>
+									<div>use to mock request responses</div>
+									<div>
+											<pre><code class="javascript">$httpBackend.whenGET(`^/api/v1/todo?.*`).respond([])</code></pre>
+									</div>
+									<div>$httpBackend.flush()</div>
+									<div>use to flush queue - aka "resolve" requests/promises</div>
+							</div>
+							<br>
+					</section>
+					<section class="" data-id="2da8a8ad4dc518451a9d16d8ed650122">
+							<h2 style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal;">2 - $httpBackend</h2>
+							<p>expect[METHOD] example</p>
+							<pre><code class="javascript"> npm run test</code></pre>
+							<img src="https://s3.amazonaws.com/media-p.slid.es/uploads/136320/images/7623535/pasted-from-clipboard.png" style="width: 855.769px; height: 422px; max-height: none; max-width: none;"><br>
+					</section>
+					<section class="" data-id="9dac769c0d226688358f0d9012756e22">
+							<h2 style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal;">2 - $httpBackend</h2>
+							<h2></h2>
+							<p style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;">expect[METHOD] example</p>
+							<pre><code class="javascript"> it('sends post request to store new todo item', () =&gt; {
+  ...
+  const todo = {
+    id: 0,
+    title: 'foo',
+    done: false,
+  }
+
+  todoListService.storeRemote(todo)
+
+  // flush http queue
+  $httpBackend.flush()
+})</code></pre>
+							<div>Add $httpBackend.expectGET() with expected data</div>
+							<div>Check resource being called in storeRemote</div>
+					</section>
+					<section class="" data-id="5805047eec4fa55ba9c97ac95a95fe38">
+							<h2>2 - $httpBackend</h2>
+							<div>expect[METHOD] example</div>
+							<div>
+									<pre><code class="shell">git checkout answer/2-http-backend</code></pre>
+							</div>
+							<pre><code class="javascript">  const requestData = [
+    // data currently stored
+    ...storedTodos,
+    // plus new todo
+    newTodo,
+  ]
+
+  // expect post request,
+  $httpBackend.expectPOST('/api/v1/todo', requestData)
+    .respond(200, newTodo)
+
+  todoListService.storeRemote(newTodo)
+
+  // flush http queue
+  $httpBackend.flush()
+})
+			</code></pre>
+							<br>
+					</section>
+					<section class="" data-id="3609f595ab5ffb380b66c48b5bbb6895">
+							<h2 style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal;">2 - $httpBackend</h2>
+							<p>inspecting promise result</p>
+							<pre><code class="shell">git checkout task/2-http-response</code></pre>
+							<p>sometimes we want to assert the response</p>
+							<pre><code class="javascript">it('returns given todo item after updating remotely', () =&gt; {
+  // updateRemote returns a promise
+  // so we can chain it to see the returned value
+  todoListService.updateRemote(todo)
+    .then((returnedTodo) =&gt; {
+      // the method should return
+      //the same todo that was updated
+      expect(returnedTodo).toEqual(todo)
+    })
+
+  // flush http queue
+  $httpBackend.flush()
+}) </code></pre>
+							<br>
+					</section>
+					<section class="" data-id="32932d60951ae692d1079fbf0f4f2eb3">
+							<h2>2 - $httpBackend</h2>
+							<div>
+									<img src="https://s3.amazonaws.com/media-p.slid.es/uploads/136320/images/7620587/pasted-from-clipboard.png" style="width: 662.293px; height: 565px; max-height: none; max-width: none;"><br>
+							</div>
+					</section>
+					<section class="" data-id="d47627fe64e276b6001625c8533b5453">
+							<h2 style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal;">2 - $httpBackend</h2>
+							<div>why??</div>
+							<div>AngularJS adds properties to objects it tracks internally</div>
+							<div>used to decide when to do digest loops</div>
+							<div>When asserting results, remove these angular properties first</div>
+							<pre><code class="javascript">JSON.parse(angular.toJson(object))</code></pre>
+							<div>Update the test to remove the angular properties before asserting</div>
+					</section>
+					<section class="" data-id="3d34bf88edc7a5575ec48448067c7437">
+							<h2>2 - $httpBackend</h2>
+							<pre><code class="javascript">git checkout answer/2-http-response</code></pre>
+							<div>
+									<pre><code class="javascript">todoListService.updateRemote(todo)
+  .then((returnedTodo) =&gt; {
+    const cleanedReturn = JSON.parse(
+      angular.toJson(returnedTodo)
+    )
+
+    expect(cleanedReturn).toEqual(todo)
+  })
+			</code></pre>
+							</div>
+							<br>
+					</section>
+					<section class="" data-id="4dcd35b897e8129cdb13a6ccc7ab9f28">
+							<h2>3 - Jest Spies</h2>
+							<pre><code class="javascript"> git checkout answer/3-spies</code></pre>
+							<div>spyOn</div>
+							<div>allow us to detect/assert methods being called</div>
+							<pre><code class="javascript">spyOn(object, 'methodName')</code></pre>
+							<div>can chain afterwards to determine behaviour when method is called</div>
+
+							<br>
+					</section>
+					<section>
+						<h2>3 - Jest Spies</h2>
+						<div>
+									<pre><code class="javascript">// calls through to the original method
+spyOn(object, 'methodName').and.callThrough()
+
+// calls the given anonymous function instead
+spyOn(object, 'methodName')
+  .and.callFake(() =&gt; { ... })</span>
+
+// return a value without needing a method
+spyOn(object, 'methodName').and.returnValue('foo')
+
+// and many more!</code></pre>
+							</div>
+					</section>
+					<section class="" data-id="b16b79f139b48af89b72b88f4c15e734">
+							<h2 style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal;">3 - Jest Spies</h2>
+							<div>jest.fn()</div>
+							<div><br></div>
+							<div>mock functions that are already spies</div>
+							<div>can be used for mocking methods</div>
+							<pre><code class="javascript">beforeEach(() =&gt; {
+  bindings = {
+    onNewTodo: jest.fn(),
+  }
+})</code></pre>
+							<br>
+					</section>
+					<section class="" data-id="69f1a69a55db64a7221929472e5a9898">
+							<h2 style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal;">3 - Jest Spies</h2>
+							<p>Task</p>
+							<pre><code class="shell">app/components/todo-form/todo-form.component.spec.ts</code></pre>
+							<pre><code data-trim class="javascript">it('calls addTodo when saving ', () =&gt; {
+  ...
+  // Spy on the addTodo method
+
+  const saveButton = element
+    .find('[data-selenium="save-button"]')
+  // click the save button
+  saveButton.click()
+  scope.$digest()
+
+  // assert the addTodo method was called
+
+  // assert that the onNewTodo binding was called
+  // and with the expected value
+})
+			</code></pre>
+							<br>
+					</section>
+					<section class="" data-id="9fb6ae6d889b7cc97ca04cc5b0a8479b">
+							<h2 style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal;">3 - Jest Spies</h2>
+							<div>Answer</div>
+							<pre><code class="javascript"> git checkout answer/3-spies</code></pre>
+							<div>
+									<pre><code class="javascript">it('calls addTodo when saving ', () =&gt; {
+  ...
+  // Spy on the addTodo method
+  spyOn($ctrl, 'addTodo').and.callThrough()
+
+  const saveButton = element
+    .find('[data-selenium="save-button"]')
+  // click the save button
+  saveButton.click()
+  scope.$digest()
+
+  // assert the addTodo method was called
+  expect($ctrl.addTodo).toHaveBeenCalled()
+  // assert that the onNewTodo binding was called
+  // and with the expected value
+  expect(bindings.onNewTodo).toHaveBeenCalledWith('foo')
+})</code></pre>
+							</div>
+							<br>
+					</section>
+					<section class="" data-id="4d2129ea3ac510de8a2f75aeb32fdc06">
+							<h2>4 - $uibModal</h2>
+							<pre><code class="javascript">git checkout task/4-uibmodal</code></pre>
+							<pre><code class="javascript">export const openDeleteTodoModal = (
+  $uibModal: ng.ui.bootstrap.IModalService,
+  todo: TodoItem,
+): ng.ui.bootstrap.IModalInstanceService =&gt; (
+  $uibModal.open({
+    template: `...`,
+    controller: DeleteTodoModalController,
+    controllerAs: '$ctrl',
+    resolve: {
+      todo: () =&gt; todo,
+    },
+    size: 'md',
+  })
+)</code></pre>modals are opened via a method call<div>
+					</div>
+					</section>
+					<section class="" data-id="8f53d2d8208fd5228e8f1150effeb35e">
+							<h2 style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal;">4 - $uibModal</h2>
+							<pre><code data-trim class="javascript">// app/components/delete-todo-modal/delete-todo-modal.ts
+confirm(): void {
+  // value passed to close() is promise result
+  this.$uibModalInstance.close(true)
+}
+			</code></pre>
+							<pre><code data-trim class="javascript">// app/components/todo/todo.component.ts
+deleteTodo(todo: TodoItem): void {
+  openDeleteTodoModal(this.$uibModal, todo)
+    .result // the promise of the modal result
+    .then((confirmed) =&gt; {
+      // after user confirms/denies, the promise resolves
+      if (confirmed) {
+        this.todoList = this.todoListService.remove(todo)
+      }
+    })
+    .catch((error) =&gt; {
+      console.log(error)
+    })
+}
+			</code></pre><br>
+					</section>
+					<section class="" data-id="8adccd23dae2cd5e0916f6b320aeb668">
+							<h2 style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal;">4 - $uibModal</h2>
+							<div>defers</div>
+							<p>defers allow us to mock promises&nbsp;</p>
+							<p>and control resolve/rejection</p>
+							<p>value passed into resolve/reject is the resolved value</p>
+							<pre><code data-trim class="javascript">const defer = $q.defer() // defer object
+
+const result = {data: [...]} // data to resolve with
+
+defer.promise // the promise in the defer object
+
+defer.resolve(result) // resolves the promise with a value
+
+defer.reject() // rejects the promise
+			</code></pre>
+							<div><br></div>
+							<div><br></div>
+					</section>
+					<section class="" data-id="c79211780b16994b4a37253019825dd4">
+							<h2>4 - $uibModal</h2>
+							<div>Task</div>
+							<pre><code class="javascript"> app/components/todo/todo.component.spec.ts</code></pre>
+							<pre><code class="javascript">it('removes todo after confirmation from user', () =&gt; {
+  ...
+  // modal defer to use when mocking
+  const modalDefer = $q.defer()
+
+  // spy on open modal method and return promise
+
+  // spy on remove method on storage service
+
+  $ctrl.deleteTodo(todoToDelete)
+
+  // resolve the modal promise
+  modalDefer.resolve(true)
+  // flush $timeout to trigger digest on promise resolving
+  $timeout.flush()
+
+  // expect modal to have been opened
+
+  // expect remove method to be called
+})</code></pre><br>
+					</section>
+					<section class="" data-id="90978d45b1fd1f4bba916c5a3c0a4008">
+							<h2 style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal;">4 - $uibModal</h2>
+							<div>Task</div>
+							<pre><code class="javascript"> git checkout answer/4-uibmodal</code></pre>
+							<pre><code class="javascript"> it('removes todo after confirmation from user', () =&gt; {
+  ...
+
+  // spy on open modal method and return promise
+  spyOn(confirmModal, 'openDeleteTodoModal')
+    .and.returnValue({result: modalDefer.promise})
+
+  // spy on remove method on storage service
+  spyOn(todoListService, 'remove').and.callThrough()
+
+  $ctrl.deleteTodo(todoToDelete)
+
+  // resolve the modal promise
+  modalDefer.resolve(true)
+  // flush $timeout to trigger digest on promise resolving
+  $timeout.flush()
+
+  // expect modal to have been opened
+  expect(confirmModal.openDeleteTodoModal)
+    .toHaveBeenCalled()
+
+  // expect remove method to be called
+  expect(todoListService.remove)
+    .toHaveBeenCalledWith(todoToDelete)
+})
+			</code></pre><br>
+					</section>
+					<section class="" data-id="59f72b755ab477be5ba99c3708cf47f1">
+							<h2>5 - Handling Model Changes</h2>
+							<div>Scenarios</div>
+							<div><br></div>
+							<div>
+									<ol>
+											<li><span style="text-align: left;">Informing parent component of model changes</span></li>
+											<ul>
+													<li>Sending data up to parent</li>
+											</ul>
+											<li>Reacting to model change in sibling</li>
+											<ul>
+													<li>Reacting to changes from parent</li>
+											</ul>
+									</ol>
+									<div style="text-align: left;"><br></div>
+							</div>
+					</section>
+					<section class="" data-id="74767d7a4a7fd4c9dca8cb2ddcdea9f9">
+							<h2>5 - Handling Model Changes</h2>
+							<div><img src="https://s3.amazonaws.com/media-p.slid.es/uploads/136320/images/7624838/Model_Changes__1_.png" style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;"><br></div>
+					</section>
+					<section class="" data-id="75331366aa37120db98fe8a8bfa6831a">
+							<h2 style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal;">5 - Handling Model Changes</h2>
+							<div>
+									<ol style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;">
+											<li>Informing parent of change</li>
+									</ol>
+							</div>
+							<p>Function binding to pass change event to parent</p>
+							<pre><code data-trim class="javascript">// app/components/todos/index.ts - parent
+&lt;todo-list
+  todos="$ctrl.todoList"
+  on-todo-changed="$ctrl.onTodoChanged(todo)"
+  on-delete-todo="$ctrl.deleteTodo(todo)"
+&gt;&lt;/todo-list&gt;
+			</code></pre>
+							<div>
+									<pre><code class="javascript">// app/components/todo-list/index.ts - child
+&lt;input type="checkbox"
+  ng-model="todo.done"
+  class="pull-right btn btn-default"
+  ng-change="$ctrl.onTodoChanged({todo: todo})"
+/&gt;</code></pre>
+					</section>
+					<section class="" data-id="19f24cc1ddcba82f85eb13998e866f37">
+							<h2>5 - Handling Model Changes</h2>
+							<p>React to model changes</p>
+							<pre><code data-trim class="javascript">$onChanges(changes: Changes&lt;Bindings&gt;): void {
+  // When a binding value changes,
+  // angular triggers an $onChanges call
+  // we can use this to detect changes
+  // to a binding value from the parent
+  if (changes.binding &amp;&amp; !changes.binding.isFirstChange()) {
+    this.ChallengeReviewInfo.apiCache.removeAll()
+    this.filterResources()
+  }
+}
+			</code></pre>
+							<pre><code class="javascript"> changes.binding.isFirstChange()</code></pre>
+							<p>$onChange is triggered once when component is first loaded with bindings.</p>
+					</section>
+					<section class="" data-id="b552e47c5570d1d2f33d4dec0014e913">
+							<h2>Conclusion</h2>
+							<div>We covered...</div>
+							<div>
+									<ul>
+											<li style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;">$provide</li>
+											<ul>
+													<li style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;">test setup</li>
+													<li style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;">mocking</li>
+											</ul>
+											<li style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;">$httpBackend</li>
+											<ul>
+													<li style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;">API requests</li>
+													<li style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;">handling $ props</li>
+											</ul>
+											<li style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;"><span style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;">Jest Spies</span><br></li>
+											<li style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;">$uibModal</li>
+											<ul>
+													<li style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;">defers</li>
+											</ul>
+											<li style="font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; font-size: 36px;">Handling Model Changes</li>
+									</ul>
+							</div>
+					</section>
 			</div>
 		</div>
 
@@ -43,7 +650,11 @@
 				hash: true,
 
 				// Learn about plugins: https://revealjs.com/plugins/
-				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+				plugins: [
+					RevealMarkdown,
+					RevealHighlight,
+					RevealNotes,
+				],
 			});
 		</script>
 	</body>
